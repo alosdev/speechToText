@@ -20,6 +20,10 @@ import com.ncorti.kotlin.template.library.android.NotificationUtil
 import kotlinx.android.synthetic.main.activity_main.*
 import java.util.Locale
 
+private const val DEFAULT_INPUT = 3
+
+private const val REQUEST_CODE_RECOGNITION = 4711
+
 class MainActivity : AppCompatActivity() {
 
     private val notificationUtil: NotificationUtil by lazy { NotificationUtil(this) }
@@ -31,7 +35,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         button_compute.setOnClickListener {
-            val input = edit_text_factorial.text.toString().toIntOrNull() ?: 3
+            val input = edit_text_factorial.text.toString().toIntOrNull() ?: DEFAULT_INPUT
             val result = FactorialCalculator.computeFactorial(input).toString()
 
             text_result.text = result
@@ -63,11 +67,11 @@ class MainActivity : AppCompatActivity() {
                         "please think carefully not to use us",
                         Toast.LENGTH_LONG
                     ).show()
-                    requestPermissions(arrayOf(RECORD_AUDIO), 4711)
+                    requestPermissions(arrayOf(RECORD_AUDIO), REQUEST_CODE_RECOGNITION)
                 }
                 else -> {
                     // You can directly ask for the permission.
-                    requestPermissions(arrayOf(RECORD_AUDIO), 4711)
+                    requestPermissions(arrayOf(RECORD_AUDIO), REQUEST_CODE_RECOGNITION)
                 }
             }
         }
@@ -79,10 +83,12 @@ class MainActivity : AppCompatActivity() {
         grantResults: IntArray
     ) {
         when (requestCode) {
-            4711 -> {
+            REQUEST_CODE_RECOGNITION -> {
                 // If request is cancelled, the result arrays are empty.
-                if ((grantResults.isNotEmpty() &&
-                        grantResults[0] == PackageManager.PERMISSION_GRANTED)
+                if ((
+                    grantResults.isNotEmpty() &&
+                        grantResults[0] == PackageManager.PERMISSION_GRANTED
+                    )
                 ) {
                     // Permission is granted. Continue the action or workflow
                     // in your app.
@@ -107,49 +113,57 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startSpeechRecognizing() {
-        speechRecognizer?.setRecognitionListener(object : RecognitionListener {
-            override fun onReadyForSpeech(p0: Bundle?) {
-                Log.i("test", "ready for speech")
-            }
+        speechRecognizer?.setRecognitionListener(
+            object : RecognitionListener {
+                override fun onReadyForSpeech(p0: Bundle?) {
+                    Log.i("test", "ready for speech")
+                }
 
-            override fun onBeginningOfSpeech() {
-                Log.i("test", "start listening")
-                stt.text = "start listening"
-            }
+                override fun onBeginningOfSpeech() {
+                    Log.i("test", "start listening")
+                    stt.text = "start listening"
+                }
 
-            override fun onRmsChanged(p0: Float) {}
+                override fun onRmsChanged(p0: Float) {
+                    // nothing
+                }
 
-            override fun onBufferReceived(p0: ByteArray?) {}
+                override fun onBufferReceived(p0: ByteArray?) {
+                    // nothing
+                }
 
-            override fun onEndOfSpeech() {
-                Log.i("test", "end speech")
-            }
+                override fun onEndOfSpeech() {
+                    Log.i("test", "end speech")
+                }
 
-            override fun onError(p0: Int) {
-                Log.i("test", "error")
-            }
+                override fun onError(p0: Int) {
+                    Log.i("test", "error")
+                }
 
-            override fun onResults(p0: Bundle?) {
-                Log.i("test", "result ready")
+                override fun onResults(p0: Bundle?) {
+                    Log.i("test", "result ready")
 
-                p0?.run {
-                    val stringArray = getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
-                    Log.i("test", "result $stringArray")
-                    stt.text = stringArray?.get(0)
+                    p0?.run {
+                        val stringArray = getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+                        Log.i("test", "result $stringArray")
+                        stt.text = stringArray?.get(0)
+                    }
+                }
+
+                override fun onPartialResults(p0: Bundle?) {
+                    Log.i("test", "partial result ready")
+                    p0?.run {
+                        val stringArray = getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+                        Log.i("test", "partial $stringArray")
+                        stt.text = stringArray?.get(0)
+                    }
+                }
+
+                override fun onEvent(p0: Int, p1: Bundle?) {
+                    // nothing
                 }
             }
-
-            override fun onPartialResults(p0: Bundle?) {
-                Log.i("test", "partial result ready")
-                p0?.run {
-                    val stringArray = getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
-                    Log.i("test", "partial $stringArray")
-                    stt.text = stringArray?.get(0)
-                }
-            }
-
-            override fun onEvent(p0: Int, p1: Bundle?) {}
-        })
+        )
         Log.i("test", "ready for speech")
 
         Log.i("test", "is available? ${SpeechRecognizer.isRecognitionAvailable(this)}")
@@ -162,8 +176,9 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        if (null == speechRecognizer)
+        if (null == speechRecognizer) {
             speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
+        }
     }
 
     override fun onPause() {
