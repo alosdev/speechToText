@@ -62,4 +62,23 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/text_result" />
 
+    <TextView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:id="@+id/stt"
+        app:layout_constraintTop_toBottomOf="@+id/button_compute"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintVertical_bias="0"
+        app:layout_constraintEnd_toStartOf="@id/mic"/>
+
+    <ImageView
+        android:paddingStart="@dimen/doub_grid_size"
+        android:id="@+id/mic"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:src="@drawable/ic_round_mic_24"
+        app:layout_constraintTop_toBottomOf="@id/button_compute"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
 </androidx.constraintlayout.widget.ConstraintLayout>
