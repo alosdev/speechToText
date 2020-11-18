@@ -10,6 +10,7 @@ import android.speech.RecognizerIntent.EXTRA_LANGUAGE
 import android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL
 import android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
 import android.speech.SpeechRecognizer
+import android.speech.tts.TextToSpeech
 import android.util.Log
 import android.view.View
 import android.widget.Toast
@@ -28,7 +29,18 @@ class MainActivity : AppCompatActivity() {
 
     private val notificationUtil: NotificationUtil by lazy { NotificationUtil(this) }
 
-    var speechRecognizer: SpeechRecognizer? = null
+    private var speechRecognizer: SpeechRecognizer? = null
+    private val textToSpeechEngine: TextToSpeech by lazy {
+        // Pass in context and the listener.
+        TextToSpeech(
+            this
+        ) { status ->
+            // set our locale only if init was success.
+            if (status == TextToSpeech.SUCCESS) {
+                textToSpeechEngine.language = Locale.getDefault()
+            }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -73,6 +85,14 @@ class MainActivity : AppCompatActivity() {
                     // You can directly ask for the permission.
                     requestPermissions(arrayOf(RECORD_AUDIO), REQUEST_CODE_RECOGNITION)
                 }
+            }
+        }
+        speaker.setOnClickListener {
+            val text = stt.text.toString().trim()
+            if (text.isNotEmpty()) {
+                textToSpeechEngine.speak(text, TextToSpeech.QUEUE_FLUSH, null, "tts1")
+            } else {
+                Toast.makeText(this, "Text cannot be empty", Toast.LENGTH_LONG).show()
             }
         }
     }
@@ -182,8 +202,15 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onPause() {
-        speechRecognizer?.destroy()
+        speechRecognizer?.stopListening()
+        textToSpeechEngine.stop()
         speechRecognizer = null
         super.onPause()
+    }
+
+    override fun onDestroy() {
+        speechRecognizer?.destroy()
+        textToSpeechEngine.shutdown()
+        super.onDestroy()
     }
 }
