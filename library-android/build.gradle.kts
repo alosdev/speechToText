@@ -65,10 +65,16 @@ if (propertiesFile.exists()) {
 }
 
 afterEvaluate {
+    tasks.register("androidSourcesJar", org.gradle.jvm.tasks.Jar::class.java) {
+        archiveClassifier.set("sources")
+        from(android.sourceSets.getByName("main").java.srcDirs)
+    }
+
     publishing {
         publications {
             create<MavenPublication>("release") {
                 from(components["release"])
+                artifact(tasks["androidSourcesJar"])
             }
         }
         repositories {
